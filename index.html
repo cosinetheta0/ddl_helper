@@ -1,0 +1,471 @@
+﻿<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#0b6e4f">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="DDL助手">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <title>作业 DDL 排序助手</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --card: #ffffff;
+      --text: #14213d;
+      --muted: #4f5d75;
+      --line: #dbe2ef;
+      --accent: #0b6e4f;
+      --accent-soft: #e8f5ef;
+      --danger: #b00020;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+      background:
+        radial-gradient(circle at 15% -10%, #d8f3dc 0%, transparent 40%),
+        radial-gradient(circle at 100% 0%, #cfe8ff 0%, transparent 45%),
+        var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      padding: 20px 14px 28px;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 520px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      box-shadow: 0 8px 24px rgba(20, 33, 61, 0.08);
+      padding: 16px;
+      margin-bottom: 14px;
+    }
+
+    h1 {
+      font-size: 24px;
+      margin: 0 0 8px;
+    }
+
+    .desc {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    input {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 11px 12px;
+      font-size: 16px;
+      outline: none;
+      background: #fff;
+    }
+
+    input:focus {
+      border-color: #4aa3ff;
+      box-shadow: 0 0 0 3px rgba(74, 163, 255, 0.18);
+    }
+
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .actions {
+      margin-top: 12px;
+      display: flex;
+      gap: 8px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 14px;
+      font-size: 15px;
+      cursor: pointer;
+    }
+
+    .add-btn {
+      flex: 1;
+      color: #fff;
+      background: linear-gradient(135deg, #1d976c, #0b6e4f);
+    }
+
+    .clear-btn {
+      color: #495057;
+      background: #eef2f7;
+    }
+
+    .urgent-box {
+      border: 1px solid #aad8c8;
+      background: var(--accent-soft);
+      border-radius: 12px;
+      padding: 12px;
+    }
+
+    .urgent-title {
+      margin: 0 0 6px;
+      font-size: 13px;
+      color: #166a50;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .urgent-main {
+      margin: 0;
+      font-size: 19px;
+      font-weight: 700;
+    }
+
+    .urgent-sub {
+      margin: 5px 0 0;
+      color: #375a4d;
+      font-size: 14px;
+    }
+
+    .list {
+      list-style: none;
+      margin: 12px 0 0;
+      padding: 0;
+      display: grid;
+      gap: 8px;
+    }
+
+    .item {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      background: #fff;
+    }
+
+    .item-name {
+      margin: 0;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .item-meta {
+      margin: 3px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .danger {
+      color: var(--danger);
+    }
+
+    .delete-btn {
+      background: #fff0f3;
+      color: #a4133c;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+
+    .empty {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <section class="panel">
+      <h1>作业 DDL 排序助手</h1>
+      <p class="desc">输入作业和月/日，自动按紧迫度排序，并显示当前最紧迫任务。</p>
+
+      <div class="row">
+        <div class="field">
+          <label for="titleInput">作业名称</label>
+          <input id="titleInput" type="text" placeholder="例如：高数作业 3">
+        </div>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="monthInput">截止月份</label>
+            <input id="monthInput" type="number" min="1" max="12" placeholder="3">
+          </div>
+          <div class="field">
+            <label for="dayInput">截止日期</label>
+            <input id="dayInput" type="number" min="1" max="31" placeholder="15">
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="add-btn" id="addBtn">添加作业</button>
+        <button class="clear-btn" id="clearBtn">清空全部</button>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="urgent-box">
+        <p class="urgent-title">最紧迫作业</p>
+        <p class="urgent-main" id="urgentMain">暂无</p>
+        <p class="urgent-sub" id="urgentSub">添加作业后会显示最近的 DDL</p>
+      </div>
+
+      <ul class="list" id="list"></ul>
+      <p class="empty" id="emptyHint">还没有作业，先添加一个吧。</p>
+    </section>
+  </main>
+
+  <script>
+    const STORAGE_KEY = "ddl_tasks_v1";
+    const tasks = loadTasks();
+
+    const titleInput = document.getElementById("titleInput");
+    const monthInput = document.getElementById("monthInput");
+    const dayInput = document.getElementById("dayInput");
+    const addBtn = document.getElementById("addBtn");
+    const clearBtn = document.getElementById("clearBtn");
+    const listEl = document.getElementById("list");
+    const urgentMain = document.getElementById("urgentMain");
+    const urgentSub = document.getElementById("urgentSub");
+    const emptyHint = document.getElementById("emptyHint");
+
+    addBtn.addEventListener("click", addTask);
+    clearBtn.addEventListener("click", clearAll);
+    [titleInput, monthInput, dayInput].forEach((el) => {
+      el.addEventListener("keydown", (e) => {
+        if (e.key === "Enter") addTask();
+      });
+    });
+
+    render();
+
+    function addTask() {
+      const title = titleInput.value.trim();
+      const month = Number(monthInput.value);
+      const day = Number(dayInput.value);
+
+      if (!title) {
+        alert("请输入作业名称");
+        titleInput.focus();
+        return;
+      }
+      if (!Number.isInteger(month) || month < 1 || month > 12) {
+        alert("月份请填写 1 到 12");
+        monthInput.focus();
+        return;
+      }
+      if (!Number.isInteger(day) || day < 1 || day > 31) {
+        alert("日期请填写 1 到 31");
+        dayInput.focus();
+        return;
+      }
+
+      const deadline = buildFutureDate(month, day);
+      if (!deadline) {
+        alert("这个日期不存在，请检查月和日是否正确");
+        return;
+      }
+
+      tasks.push({
+        id: makeId(),
+        title,
+        month,
+        day,
+        deadlineISO: deadline.toISOString()
+      });
+
+      titleInput.value = "";
+      monthInput.value = "";
+      dayInput.value = "";
+      saveTasks();
+      render();
+      titleInput.focus();
+    }
+
+    function clearAll() {
+      if (tasks.length === 0) return;
+      const ok = confirm("确定要清空全部作业吗？");
+      if (!ok) return;
+      tasks.length = 0;
+      saveTasks();
+      render();
+    }
+
+    function removeTask(id) {
+      const idx = tasks.findIndex((t) => t.id === id);
+      if (idx >= 0) {
+        tasks.splice(idx, 1);
+        saveTasks();
+        render();
+      }
+    }
+
+    function render() {
+      const sorted = [...tasks].sort((a, b) => {
+        return new Date(a.deadlineISO) - new Date(b.deadlineISO);
+      });
+
+      listEl.innerHTML = "";
+      if (sorted.length === 0) {
+        urgentMain.textContent = "暂无";
+        urgentSub.textContent = "添加作业后会显示最近的 DDL";
+        emptyHint.style.display = "block";
+        return;
+      }
+
+      emptyHint.style.display = "none";
+      const top = sorted[0];
+      const topDate = new Date(top.deadlineISO);
+      urgentMain.textContent = top.title;
+      urgentSub.textContent = "DDL: " + formatDate(topDate) + "（" + remainText(topDate) + "）";
+
+      sorted.forEach((task) => {
+        const d = new Date(task.deadlineISO);
+        const li = document.createElement("li");
+        li.className = "item";
+
+        const left = document.createElement("div");
+        const name = document.createElement("p");
+        name.className = "item-name";
+        name.textContent = task.title;
+
+        const meta = document.createElement("p");
+        meta.className = "item-meta";
+        const leftText = remainText(d);
+        meta.textContent = "DDL: " + formatDate(d) + " · " + leftText;
+        if (leftText.includes("已过期")) {
+          meta.classList.add("danger");
+        }
+
+        left.appendChild(name);
+        left.appendChild(meta);
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.textContent = "删除";
+        del.addEventListener("click", () => removeTask(task.id));
+
+        li.appendChild(left);
+        li.appendChild(del);
+        listEl.appendChild(li);
+      });
+    }
+
+    function buildFutureDate(month, day) {
+      const now = new Date();
+      const year = now.getFullYear();
+
+      const thisYear = new Date(year, month - 1, day, 23, 59, 59, 999);
+      if (!isValidDate(thisYear, year, month, day)) {
+        return null;
+      }
+      if (thisYear >= now) {
+        return thisYear;
+      }
+
+      const nextYear = new Date(year + 1, month - 1, day, 23, 59, 59, 999);
+      if (!isValidDate(nextYear, year + 1, month, day)) {
+        return null;
+      }
+      return nextYear;
+    }
+
+    function isValidDate(date, year, month, day) {
+      return (
+        date.getFullYear() === year &&
+        date.getMonth() === month - 1 &&
+        date.getDate() === day
+      );
+    }
+
+    function formatDate(date) {
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, "0");
+      const d = String(date.getDate()).padStart(2, "0");
+      return y + "-" + m + "-" + d;
+    }
+
+    function remainText(deadline) {
+      const now = new Date();
+      const dayMs = 24 * 60 * 60 * 1000;
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const ddlStart = new Date(deadline.getFullYear(), deadline.getMonth(), deadline.getDate());
+      const dayLeft = Math.round((ddlStart.getTime() - todayStart.getTime()) / dayMs);
+
+      if (dayLeft < 0) return "已过期";
+      if (dayLeft === 0) return "今天截止";
+      if (dayLeft === 1) return "还剩 1 天";
+      return "还剩 " + dayLeft + " 天";
+    }
+
+    function makeId() {
+      if (window.crypto && typeof window.crypto.randomUUID === "function") {
+        return window.crypto.randomUUID();
+      }
+      return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    }
+
+    function saveTasks() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
+    }
+
+    function loadTasks() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return [];
+        const parsed = JSON.parse(raw);
+        if (!Array.isArray(parsed)) return [];
+        return parsed.filter((item) => {
+          return item && typeof item.title === "string" && typeof item.deadlineISO === "string" && typeof item.id === "string";
+        });
+      } catch {
+        return [];
+      }
+    }
+  </script>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {
+          // Ignore registration errors so the app still works without offline mode.
+        });
+      });
+    }
+  </script>
+</body>
+</html>
+
+
