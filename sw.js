@@ -1,4 +1,4 @@
-﻿const CACHE_NAME = "ddl-helper-v1";
+﻿const CACHE_NAME = "ddl-helper-v2";
 const APP_SHELL = [
   "./",
   "./index.html",
@@ -50,3 +50,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+
